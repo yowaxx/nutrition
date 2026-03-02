@@ -154,6 +154,11 @@ body {
 /* ── QUICK ADD ── */
 .quick-section { margin: 16px 16px 0; }
 .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+.quick-chip.pinned { border-color: var(--accent); background: var(--accent-light); }
+.pin-dot { position: absolute; top: 6px; right: 6px; font-size: 10px; }
+.quick-chip { position: relative; }
+
 .quick-chip {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -376,6 +381,7 @@ body {
   <div class="search-section" style="margin-top:16px">
     <div class="section-header" style="margin-bottom:10px">
       <div class="section-title">🔍 Rechercher</div>
+      <button onclick="openManualEntry()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;">✏️ Saisie manuelle</button>
     </div>
     <div class="search-row">
       <div class="search-box">
@@ -429,7 +435,8 @@ body {
       </div>
     </div>
     <button class="modal-add-btn" onclick="confirmAdd()">Ajouter au journal</button>
-    <button onclick="addCurrentAsFixed()" style="width:100%;background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--sans);font-size:13px;padding:11px;border-radius:12px;cursor:pointer;margin-top:8px;">📌 Fixer ce repas (quotidien)</button>
+    <button onclick="addCurrentAsFixed()" style="width:100%;background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--sans);font-size:13px;padding:11px;border-radius:12px;cursor:pointer;margin-top:8px;">🔒 Fixer ce repas (quotidien)</button>
+    <button id="pinBtn" onclick="togglePinCurrent()" style="width:100%;background:none;border:1px solid var(--border);color:var(--text2);font-family:var(--sans);font-size:13px;padding:11px;border-radius:12px;cursor:pointer;margin-top:8px;">📌 Épingler dans les favoris</button>
   </div>
 </div>
 
@@ -457,6 +464,53 @@ body {
   </div>
 </div>
 
+
+
+<!-- MANUAL ENTRY MODAL -->
+<div class="modal-overlay" id="manualOverlay">
+  <div class="modal" style="position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="document.getElementById('manualOverlay').classList.remove('open')">✕</button>
+    <h3>✏️ Saisie manuelle</h3>
+    <div class="modal-brand" style="margin-bottom:16px">Crée un aliment personnalisé</div>
+    <div style="display:grid;gap:10px;margin-bottom:16px">
+      <input type="text" id="man_name" placeholder="Nom de l'aliment" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:15px;padding:11px 14px;outline:none;width:100%">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">CALORIES (kcal)</div>
+          <input type="number" id="man_cal" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">PROTÉINES (g)</div>
+          <input type="number" id="man_prot" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">GLUCIDES (g)</div>
+          <input type="number" id="man_gluc" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">LIPIDES (g)</div>
+          <input type="number" id="man_lip" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">SUCRES (g)</div>
+          <input type="number" id="man_sucres" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">POUR (g/u)</div>
+          <input type="number" id="man_per" placeholder="100" value="100" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+      </div>
+    </div>
+    <div class="modal-select-meal" id="manualMealSelector">
+      <div class="meal-select-btn selected" data-meal="0" onclick="selectManualMeal(0)">🌅 Petit-déj</div>
+      <div class="meal-select-btn" data-meal="1" onclick="selectManualMeal(1)">☀️ Déjeuner</div>
+      <div class="meal-select-btn" data-meal="2" onclick="selectManualMeal(2)">🌙 Dîner</div>
+      <div class="meal-select-btn" data-meal="3" onclick="selectManualMeal(3)">🍎 Collation</div>
+    </div>
+    <button onclick="confirmManual()" style="width:100%;background:var(--accent);border:none;color:white;font-family:var(--sans);font-size:15px;font-weight:700;padding:15px;border-radius:14px;cursor:pointer;margin-top:16px">Ajouter au journal</button>
+  </div>
+</div>
 
 <!-- FIXED MEALS CONFIRMATION MODAL -->
 <div class="fixed-meals-modal" id="fixedMealsModal">
@@ -491,17 +545,59 @@ let searchTimeout;
 
 const MEAL_NAMES = ['🌅 Petit-déjeuner', '☀️ Déjeuner', '🌙 Dîner', '🍎 Collation'];
 
-const FAVS = [
-  { name: 'Cottage', emoji: '🫙', cal: 90, prot: 11, gluc: 4, lip: 4, sucres: 3, per: 100 },
-  { name: 'Thon', emoji: '🐟', cal: 128, prot: 28, gluc: 0, lip: 1, sucres: 0, per: 100 },
-  { name: 'Dinde', emoji: '🍗', cal: 110, prot: 24, gluc: 0, lip: 2, sucres: 0, per: 100 },
-  { name: 'Riz cuit', emoji: '🍚', cal: 130, prot: 2.7, gluc: 28, lip: 0.3, sucres: 0, per: 100 },
-  { name: 'Ananas', emoji: '🍍', cal: 50, prot: 0.5, gluc: 13, lip: 0.1, sucres: 10, per: 100 },
-  { name: 'Wasa', emoji: '🍞', cal: 35, prot: 1, gluc: 7, lip: 0.4, sucres: 0.3, per: 10 },
-  { name: 'Œuf', emoji: '🥚', cal: 78, prot: 6, gluc: 0.6, lip: 5, sucres: 0, per: 1 },
-  { name: 'Avocat', emoji: '🥑', cal: 160, prot: 2, gluc: 9, lip: 15, sucres: 0.7, per: 100 },
-  { name: 'Shaker 💪', emoji: '🥤', cal: 115, prot: 28, gluc: 0, lip: 0, sucres: 0, per: 1 },
-];
+// Dynamic favorites system
+function loadPinnedFavs() {
+  return JSON.parse(localStorage.getItem('pinnedFavs') || '[]');
+}
+function savePinnedFavs(list) {
+  localStorage.setItem('pinnedFavs', JSON.stringify(list));
+}
+function loadFoodHistory() {
+  return JSON.parse(localStorage.getItem('foodHistory') || '{}');
+}
+function saveFoodHistory(h) {
+  localStorage.setItem('foodHistory', JSON.stringify(h));
+}
+
+function trackFoodUsage(foodKey, foodData) {
+  const h = loadFoodHistory();
+  if (!h[foodKey]) h[foodKey] = { count: 0, data: foodData };
+  h[foodKey].count++;
+  h[foodKey].data = foodData;
+  saveFoodHistory(h);
+}
+
+function getTopFoods(n = 9) {
+  const pinned = loadPinnedFavs();
+  const pinnedKeys = pinned.map(p => p.key);
+  const h = loadFoodHistory();
+  const history = Object.entries(h)
+    .filter(([k]) => !pinnedKeys.includes(k))
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, n - pinned.length)
+    .map(([k, v]) => ({ key: k, ...v.data, count: v.count }));
+  return [...pinned.map(p => ({ ...p, pinned: true })), ...history];
+}
+
+function getFoodKey(food) {
+  return (food.name || '').toLowerCase().replace(/\s+/g, '_').slice(0, 30);
+}
+
+function isPinned(foodKey) {
+  return loadPinnedFavs().some(p => p.key === foodKey);
+}
+
+function togglePin(foodKey, foodData) {
+  const pinned = loadPinnedFavs();
+  const idx = pinned.findIndex(p => p.key === foodKey);
+  if (idx >= 0) {
+    pinned.splice(idx, 1);
+  } else {
+    pinned.unshift({ key: foodKey, ...foodData });
+  }
+  savePinnedFavs(pinned);
+  renderFavs();
+}
 
 // ─── DATES ───────────────────────────────────────────────────────────────
 function getDateKey(offset = currentDateOffset) {
@@ -719,6 +815,12 @@ function openModal(name, brand, cal, prot, gluc, lip, defaultQty = 100, servingS
   }
   
   updateMealSelector();
+  // Update pin button state
+  if (pendingFood) {
+    const fkey = getFoodKey(pendingFood);
+    const btn = document.getElementById('pinBtn');
+    if (btn) btn.textContent = isPinned(fkey) ? '📌 Désépingler des favoris' : '📌 Épingler dans les favoris';
+  }
   document.getElementById('modalOverlay').classList.add('open');
 }
 
@@ -919,6 +1021,56 @@ function render() {
 }
 
 
+
+// ─── MANUAL ENTRY ────────────────────────────────────────────────────────
+let manualMeal = 0;
+
+function openManualEntry() {
+  manualMeal = selectedMeal;
+  updateManualMealSelector();
+  document.getElementById('manualOverlay').classList.add('open');
+}
+
+function selectManualMeal(mi) {
+  manualMeal = mi;
+  updateManualMealSelector();
+}
+
+function updateManualMealSelector() {
+  document.querySelectorAll('#manualMealSelector .meal-select-btn').forEach(b => {
+    b.classList.toggle('selected', +b.dataset.meal === manualMeal);
+  });
+}
+
+function confirmManual() {
+  const name = document.getElementById('man_name').value.trim();
+  if (!name) { alert('Donne un nom à cet aliment'); return; }
+  const cal = parseFloat(document.getElementById('man_cal').value) || 0;
+  const prot = parseFloat(document.getElementById('man_prot').value) || 0;
+  const gluc = parseFloat(document.getElementById('man_gluc').value) || 0;
+  const lip = parseFloat(document.getElementById('man_lip').value) || 0;
+  const sucres = parseFloat(document.getElementById('man_sucres').value) || 0;
+  const per = parseFloat(document.getElementById('man_per').value) || 100;
+
+  const foodData = { name, emoji: '✏️', cal, prot, gluc, lip, sucres, per, brand: 'Manuel' };
+  const fkey = getFoodKey(foodData);
+  trackFoodUsage(fkey, foodData);
+
+  const journal = loadJournal();
+  journal.push({
+    id: Date.now(), name, qty: per, unit: per === 1 ? 'u' : 'g',
+    meal: manualMeal, cal, prot, gluc, lip, sucres,
+  });
+  saveJournal(journal);
+  document.getElementById('manualOverlay').classList.remove('open');
+  // Reset fields
+  ['man_name','man_cal','man_prot','man_gluc','man_lip','man_sucres'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('man_per').value = 100;
+  switchPage('Journal');
+  render();
+  renderFavs();
+}
+
 // ─── FIXED MEALS ─────────────────────────────────────────────────────────
 function loadFixedMeals() {
   return JSON.parse(localStorage.getItem('fixedMeals') || '[]');
@@ -990,6 +1142,22 @@ function skipFixedMeals() {
 }
 
 // Add current food as fixed meal from modal
+function togglePinCurrent() {
+  if (!pendingFood) return;
+  const fkey = getFoodKey(pendingFood);
+  const pinned = isPinned(fkey);
+  togglePin(fkey, {
+    name: pendingFood.name, brand: pendingFood.brand || '',
+    emoji: pendingFood.emoji || '🍽️',
+    cal: pendingFood.cal, prot: pendingFood.prot, gluc: pendingFood.gluc,
+    lip: pendingFood.lip, sucres: pendingFood.sucres || 0,
+    per: pendingFood.per, servingSize: pendingFood.servingSize || null,
+  });
+  const btn = document.getElementById('pinBtn');
+  if (btn) btn.textContent = isPinned(fkey) ? '📌 Désépingler des favoris' : '📌 Épingler dans les favoris';
+  renderFavs();
+}
+
 function addCurrentAsFixed() {
   if (!pendingFood) return;
   const qty = parseFloat(document.getElementById('qtyInput').value) || 100;
