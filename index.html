@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Johann · Nutrition</title>
+<title>44 is hot</title>
+<meta name="apple-mobile-web-app-title" content="44 is hot">
+<meta name="application-name" content="44 is hot">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMTVhMDNkIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojODZlZmFjIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIHJ4PSIyOCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjYwIiB5PSI1MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI4MDAiIGZvbnQtc2l6ZT0iMzYiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj40NDwvdGV4dD48dGV4dCB4PSI2MCIgeT0iNzQiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjEzIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuOTUpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMiI+SVMgSE9UPC90ZXh0PjxwYXRoIGQ9Ik00OCA5MCBRNTI4MyA1Njg3IDU2ODcgUTU4IDgwIDYwIDc4IFE2MiA4MCA2NCA4NyBRNjggODMgNzIgOTAgUTY4IDk5IDYwIDEwMiBRNTIgOTkgNDggOTBaIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMzUpIi8+PC9zdmc+">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -285,7 +288,7 @@ body {
 <!-- HEADER -->
 <div class="header">
   <div class="header-row1">
-    <h1>Johann <span>·</span> Nutrition</h1>
+    <h1>44 <span>is hot</span></h1>
     <button class="settings-btn" onclick="openSettings()">⚙️</button>
   </div>
   <div class="date-nav">
@@ -410,6 +413,7 @@ body {
       <div class="modal-macro"><div class="val" id="m_lip">—</div><div class="lbl">lip</div></div>
     </div>
     <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">Pour quel repas ?</div>
+    <div id="modalServing" style="display:none"></div>
     <div class="modal-select-meal" id="mealSelector">
       <div class="meal-select-btn selected" data-meal="0" onclick="selectMeal(0)">🌅 Petit-déj</div>
       <div class="meal-select-btn" data-meal="1" onclick="selectMeal(1)">☀️ Déjeuner</div>
@@ -692,7 +696,7 @@ function openAddForMeal(mi) {
 }
 
 // ─── MODAL ───────────────────────────────────────────────────────────────
-function openModal(name, brand, cal, prot, gluc, lip, defaultQty = 100) {
+function openModal(name, brand, cal, prot, gluc, lip, defaultQty = 100, servingSize = null) {
   document.getElementById('modalName').textContent = name;
   document.getElementById('modalBrand').textContent = brand || '';
   document.getElementById('m_cal').textContent = Math.round(cal);
@@ -700,6 +704,20 @@ function openModal(name, brand, cal, prot, gluc, lip, defaultQty = 100) {
   document.getElementById('m_gluc').textContent = (Math.round(gluc * 10) / 10) + 'g';
   document.getElementById('m_lip').textContent = (Math.round(lip * 10) / 10) + 'g';
   document.getElementById('qtyInput').value = defaultQty;
+  
+  // Show per-serving info if available
+  const servingEl = document.getElementById('modalServing');
+  if (servingSize && servingSize > 0) {
+    const f = servingSize / 100;
+    servingEl.innerHTML = `<div style="background:var(--accent-light);border:1px solid #c4b5fd;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--accent)">
+      📦 Par portion (${servingSize}g) : ${Math.round(cal*f)} kcal · ${Math.round(prot*f*10)/10}g P · ${Math.round(gluc*f*10)/10}g G · ${Math.round(lip*f*10)/10}g L
+      <button onclick="document.getElementById('qtyInput').value=${servingSize}" style="float:right;background:var(--accent);color:white;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:10px">Utiliser</button>
+    </div>`;
+    servingEl.style.display = 'block';
+  } else {
+    servingEl.style.display = 'none';
+  }
+  
   updateMealSelector();
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -789,15 +807,17 @@ async function searchOFF(query) {
 function selectProduct(i) {
   const p = window._searchResults[i];
   const n = p.nutriments;
+  const servingSize = parseFloat(p.serving_size) || null;
   pendingFood = {
     name: p.product_name, brand: p.brands || '',
     cal: n['energy-kcal_100g'] || 0, prot: n.proteins_100g || 0,
     gluc: n.carbohydrates_100g || 0, lip: n.fat_100g || 0,
     sucres: n.sugars_100g || 0, per: 100,
+    servingSize,
   };
   document.getElementById('searchResults').style.display = 'none';
   document.getElementById('searchInput').value = '';
-  openModal(pendingFood.name, pendingFood.brand, pendingFood.cal, pendingFood.prot, pendingFood.gluc, pendingFood.lip);
+  openModal(pendingFood.name, pendingFood.brand, pendingFood.cal, pendingFood.prot, pendingFood.gluc, pendingFood.lip, 100, servingSize);
 }
 
 // ─── SCANNER ─────────────────────────────────────────────────────────────
@@ -851,13 +871,15 @@ async function lookupBarcode(code) {
     const data = await res.json();
     if (data.status !== 1) { alert('Produit non trouvé'); return; }
     const p = data.product; const n = p.nutriments;
+    const servingSize = parseFloat(p.serving_size) || null;
     pendingFood = {
       name: p.product_name || code, brand: p.brands || '',
       cal: n['energy-kcal_100g'] || 0, prot: n.proteins_100g || 0,
       gluc: n.carbohydrates_100g || 0, lip: n.fat_100g || 0,
       sucres: n.sugars_100g || 0, per: 100,
+      servingSize,
     };
-    openModal(pendingFood.name, pendingFood.brand, pendingFood.cal, pendingFood.prot, pendingFood.gluc, pendingFood.lip);
+    openModal(pendingFood.name, pendingFood.brand, pendingFood.cal, pendingFood.prot, pendingFood.gluc, pendingFood.lip, 100, servingSize);
   } catch(e) { alert('Erreur réseau'); }
 }
 
