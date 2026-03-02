@@ -126,6 +126,8 @@ body {
 .chart-section { margin: 16px 16px 0; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); }
+.week-tab { flex:1;background:none;border:none;color:var(--text2);font-family:var(--mono);font-size:10px;font-weight:700;padding:6px 4px;border-radius:8px;cursor:pointer;letter-spacing:0.3px }
+.week-tab.active { background:white;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,0.08) }
 .adherence-badge { background: var(--accent-light); color: var(--accent); font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
 .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px 8px; box-shadow: var(--shadow); }
 .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
@@ -343,19 +345,45 @@ body {
     </div>
   </div>
 
-  <!-- Sucres -->
+  <!-- Sucres + micro -->
   <div class="sucres-pill ok" id="sucresPill">
     <span>🍬 Sucres</span>
     <span id="sucresVal">0g / 50g max</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 16px 0">
+    <div class="macro-card" style="padding:10px 12px">
+      <div class="macro-card-label">Fibres</div>
+      <div style="font-size:18px;font-weight:800;color:#0891b2"><span id="fibresVal">0</span><span style="font-size:11px;color:var(--muted)">g</span></div>
+      <div class="macro-card-target">obj ≥ 25g</div>
+      <div class="macro-bar-bg"><div class="macro-bar-fill" id="fibresBar" style="background:#0891b2;width:0%"></div></div>
+    </div>
+    <div class="macro-card" style="padding:10px 12px">
+      <div class="macro-card-label">Sel</div>
+      <div style="font-size:18px;font-weight:800;color:#dc2626"><span id="selVal">0</span><span style="font-size:11px;color:var(--muted)">g</span></div>
+      <div class="macro-card-target">max 6g/jour</div>
+      <div class="macro-bar-bg"><div class="macro-bar-fill" id="selBar" style="background:#dc2626;width:0%"></div></div>
+    </div>
   </div>
 
   <!-- Weekly chart -->
   <div class="chart-section">
     <div class="section-header">
       <div class="section-title">📈 7 derniers jours</div>
-      <div class="adherence-badge" id="adherenceBadge">—</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="adherence-badge" id="adherenceBadge">—</div>
+        <button onclick="exportCSV()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer;letter-spacing:0.5px">⬇ CSV</button>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:12px;background:var(--surface2);padding:3px;border-radius:10px">
+      <button onclick="setWeekTab('cal')" id="tabCal" class="week-tab active">Calories</button>
+      <button onclick="setWeekTab('prot')" id="tabProt" class="week-tab">Protéines</button>
+      <button onclick="setWeekTab('gluc')" id="tabGluc" class="week-tab">Glucides</button>
+      <button onclick="setWeekTab('lip')" id="tabLip" class="week-tab">Lipides</button>
     </div>
     <div class="chart-bars" id="chartBars"></div>
+    <!-- Weekly summary table -->
+    <div id="weekSummary" style="margin-top:12px;background:var(--surface2);border-radius:12px;overflow:hidden"></div>
   </div>
 
   <!-- Repas -->
@@ -417,6 +445,8 @@ body {
       <div class="modal-macro"><div class="val" id="m_prot">—</div><div class="lbl">prot</div></div>
       <div class="modal-macro"><div class="val" id="m_gluc">—</div><div class="lbl">gluc</div></div>
       <div class="modal-macro"><div class="val" id="m_lip">—</div><div class="lbl">lip</div></div>
+      <div class="modal-macro"><div class="val" id="m_fibres">—</div><div class="lbl">fibres</div></div>
+      <div class="modal-macro"><div class="val" id="m_sel">—</div><div class="lbl">sel</div></div>
     </div>
     <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">Pour quel repas ?</div>
     <div id="modalServing" style="display:none"></div>
@@ -495,6 +525,14 @@ body {
         <div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">SUCRES (g)</div>
           <input type="number" id="man_sucres" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">FIBRES (g)</div>
+          <input type="number" id="man_fibres" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">SEL (g)</div>
+          <input type="number" id="man_sel" placeholder="0" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:16px;padding:10px 12px;outline:none;width:100%">
         </div>
         <div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">POUR (g/u)</div>
@@ -662,7 +700,9 @@ function getTotals(journal) {
     cal: acc.cal + e.cal, prot: acc.prot + e.prot,
     gluc: acc.gluc + e.gluc, lip: acc.lip + e.lip,
     sucres: acc.sucres + (e.sucres || 0),
-  }), { cal: 0, prot: 0, gluc: 0, lip: 0, sucres: 0 });
+    fibres: acc.fibres + (e.fibres || 0),
+    sel: acc.sel + (e.sel || 0),
+  }), { cal: 0, prot: 0, gluc: 0, lip: 0, sucres: 0, fibres: 0, sel: 0 });
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────
@@ -708,12 +748,18 @@ function renderMacros(t) {
   // Macros
   const setM = (valId, barId, tgtId, val, target) => {
     document.getElementById(valId).textContent = Math.round(val * 10) / 10;
-    document.getElementById(tgtId).textContent = target;
+    if (tgtId) document.getElementById(tgtId).textContent = target;
     document.getElementById(barId).style.width = Math.min(val / target * 100, 100) + '%';
   };
   setM('protVal', 'protBar', 'protTargetLbl', t.prot, targets.prot);
   setM('glucVal', 'glucBar', 'glucTargetLbl', t.gluc, targets.gluc);
   setM('lipVal', 'lipBar', 'lipTargetLbl', t.lip, targets.lip);
+  // Fibres + sel
+  document.getElementById('fibresVal').textContent = Math.round((t.fibres||0)*10)/10;
+  document.getElementById('fibresBar').style.width = Math.min((t.fibres||0)/25*100,100)+'%';
+  document.getElementById('selVal').textContent = Math.round((t.sel||0)*10)/10;
+  document.getElementById('selBar').style.width = Math.min((t.sel||0)/6*100,100)+'%';
+  document.getElementById('selBar').style.background = (t.sel||0)>6 ? 'var(--red)' : '#dc2626';
 
   // Sucres
   const s = Math.round(t.sucres * 10) / 10;
@@ -807,6 +853,8 @@ function openModal(name, brand, cal, prot, gluc, lip, defaultQty = 100, servingS
   document.getElementById('m_prot').textContent = (Math.round(prot * 10) / 10) + 'g';
   document.getElementById('m_gluc').textContent = (Math.round(gluc * 10) / 10) + 'g';
   document.getElementById('m_lip').textContent = (Math.round(lip * 10) / 10) + 'g';
+  document.getElementById('m_fibres').textContent = pendingFood?.fibres != null ? (Math.round((pendingFood.fibres||0)*10)/10)+'g' : '—';
+  document.getElementById('m_sel').textContent = pendingFood?.sel != null ? (Math.round((pendingFood.sel||0)*10)/10)+'g' : '—';
   document.getElementById('qtyInput').value = defaultQty;
   
   // Show per-serving info if available
@@ -868,6 +916,8 @@ function confirmAdd() {
     gluc: Math.round(pendingFood.gluc * factor * 10) / 10,
     lip: Math.round(pendingFood.lip * factor * 10) / 10,
     sucres: Math.round((pendingFood.sucres || 0) * factor * 10) / 10,
+    fibres: Math.round((pendingFood.fibres || 0) * factor * 10) / 10,
+    sel: Math.round((pendingFood.sel || 0) * factor * 10) / 10,
   });
   saveJournal(journal);
   closeModal();
@@ -922,8 +972,10 @@ function selectProduct(i) {
     name: p.product_name, brand: p.brands || '',
     cal: n['energy-kcal_100g'] || 0, prot: n.proteins_100g || 0,
     gluc: n.carbohydrates_100g || 0, lip: n.fat_100g || 0,
-    sucres: n.sugars_100g || 0, per: 100,
-    servingSize,
+    sucres: n.sugars_100g || 0,
+    fibres: n.fiber_100g || n['fiber-total_100g'] || 0,
+    sel: n.salt_100g || n.sodium_100g ? (n.sodium_100g||0)*2.54 : 0,
+    per: 100, servingSize,
   };
   document.getElementById('searchResults').style.display = 'none';
   document.getElementById('searchInput').value = '';
@@ -986,8 +1038,10 @@ async function lookupBarcode(code) {
       name: p.product_name || code, brand: p.brands || '',
       cal: n['energy-kcal_100g'] || 0, prot: n.proteins_100g || 0,
       gluc: n.carbohydrates_100g || 0, lip: n.fat_100g || 0,
-      sucres: n.sugars_100g || 0, per: 100,
-      servingSize,
+      sucres: n.sugars_100g || 0,
+      fibres: n.fiber_100g || n['fiber-total_100g'] || 0,
+      sel: n.salt_100g || (n.sodium_100g ? n.sodium_100g*2.54 : 0),
+      per: 100, servingSize,
     };
     openModal(pendingFood.name, pendingFood.brand, pendingFood.cal, pendingFood.prot, pendingFood.gluc, pendingFood.lip, 100, servingSize);
   } catch(e) { alert('Erreur réseau'); }
@@ -1058,21 +1112,23 @@ function confirmManual() {
   const gluc = parseFloat(document.getElementById('man_gluc').value) || 0;
   const lip = parseFloat(document.getElementById('man_lip').value) || 0;
   const sucres = parseFloat(document.getElementById('man_sucres').value) || 0;
+  const fibres = parseFloat(document.getElementById('man_fibres').value) || 0;
+  const sel = parseFloat(document.getElementById('man_sel').value) || 0;
   const per = parseFloat(document.getElementById('man_per').value) || 100;
 
-  const foodData = { name, emoji: '✏️', cal, prot, gluc, lip, sucres, per, brand: 'Manuel' };
+  const foodData = { name, emoji: '✏️', cal, prot, gluc, lip, sucres, fibres, sel, per, brand: 'Manuel' };
   const fkey = getFoodKey(foodData);
   trackFoodUsage(fkey, foodData);
 
   const journal = loadJournal();
   journal.push({
     id: Date.now(), name, qty: per, unit: per === 1 ? 'u' : 'g',
-    meal: manualMeal, cal, prot, gluc, lip, sucres,
+    meal: manualMeal, cal, prot, gluc, lip, sucres, fibres, sel,
   });
   saveJournal(journal);
   document.getElementById('manualOverlay').classList.remove('open');
   // Reset fields
-  ['man_name','man_cal','man_prot','man_gluc','man_lip','man_sucres'].forEach(id => document.getElementById(id).value = '');
+  ['man_name','man_cal','man_prot','man_gluc','man_lip','man_sucres','man_fibres','man_sel'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('man_per').value = 100;
   switchPage('Journal');
   render();
@@ -1204,6 +1260,43 @@ function openAddFixedModal() {
   document.getElementById('settingsOverlay').classList.remove('open');
   switchPage('Add');
   alert('Cherche un aliment, puis utilise le bouton "📌 Fixer ce repas" dans la modale de confirmation.');
+}
+
+
+// ─── EXPORT CSV ───────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Date', 'Repas', 'Aliment', 'Quantité', 'Unité', 'Calories', 'Protéines(g)', 'Glucides(g)', 'Lipides(g)', 'Sucres(g)', 'Fibres(g)', 'Sel(g)']];
+  const mealNames = ['Petit-déj', 'Déjeuner', 'Dîner', 'Collation'];
+
+  for (let i = -29; i <= 0; i++) {
+    const dateKey = (() => { const d = new Date(); d.setDate(d.getDate()+i); return d.toISOString().slice(0,10); })();
+    const journal = JSON.parse(localStorage.getItem('journal_' + dateKey) || '[]');
+    journal.forEach(e => {
+      rows.push([
+        dateKey,
+        mealNames[e.meal] || e.meal,
+        e.name,
+        e.qty,
+        e.unit,
+        e.cal,
+        e.prot,
+        e.gluc,
+        e.lip,
+        e.sucres || 0,
+        e.fibres || 0,
+        e.sel || 0,
+      ]);
+    });
+  }
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '44-is-hot-export-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────
